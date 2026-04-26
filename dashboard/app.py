@@ -138,6 +138,7 @@ elif page == "Top Livres":
     orientation="h",
     title="Top livres vendus"
     )
+    fig_books.update_traces(marker_color="purple")
     st.plotly_chart(fig_books, use_container_width=True)
 
     fig2 = px.bar(
