@@ -69,10 +69,12 @@ elif page == "Ventes par Période":
     )
 
     fig_an = px.bar(
-        df_an,
-        x="ANNEES",
-        y="TOTAL_CA",
-        title="Chiffre d'affaires par année"
+    df_an,
+    x="ANNEES",
+    y="TOTAL_CA",
+    color="ANNEES",
+    text="TOTAL_CA",
+    title="Chiffre d'affaires par année"
     )
     st.plotly_chart(fig_an, use_container_width=True)
 
@@ -81,13 +83,22 @@ elif page == "Ventes par Période":
         TOTAL_CA=("MONTANT_LIGNE", "sum")
     )
 
-    fig_mois = px.bar(
-        df_mois,
-        x="MOIS",
-        y="TOTAL_CA",
-        title="Chiffre d'affaires par mois"
+    fig_mois_line = px.line(
+    df_mois,
+    x="MOIS",
+    y="TOTAL_CA",
+    markers=True,
+    title="Évolution mensuelle du chiffre d'affaires"
     )
-    st.plotly_chart(fig_mois, use_container_width=True)
+    st.plotly_chart(fig_mois_line, use_container_width=True)
+    
+    fig_area = px.area(
+    df_mois,
+    x="MOIS",
+    y="TOTAL_CA",
+    title="Tendance cumulée du chiffre d'affaires mensuel"
+    )
+    st.plotly_chart(fig_area, use_container_width=True)
 
     df_jour = df.groupby("JOUR", as_index=False)["QTE"].sum()
 
@@ -98,6 +109,7 @@ elif page == "Ventes par Période":
         title="Quantité vendue par jour de la semaine"
     )
     st.plotly_chart(fig_jour, use_container_width=True)
+    
 
 elif page == "Top Livres":
     st.header("Top livres vendus")
@@ -117,15 +129,15 @@ elif page == "Top Livres":
     top_n = st.slider("Nombre de livres à afficher", 5, 20, 10)
     df_top = df.head(top_n)
 
-    fig1 = px.bar(
-        df_top,
-        x="BOOK_INTITULE",
-        y="TOTAL_QTE",
-        color="CATEGORY_INTITULE",
-        title=f"Top {top_n} livres par quantité vendue"
+    fig_books = px.bar(
+    df_top,
+    x="TOTAL_QTE",
+    y="BOOK_INTITULE",
+    color="CATEGORY_INTITULE",
+    orientation="h",
+    title="Top livres vendus"
     )
-    fig1.update_xaxes(tickangle=45)
-    st.plotly_chart(fig1, use_container_width=True)
+    st.plotly_chart(fig_books, use_container_width=True)
 
     fig2 = px.bar(
         df_top,
