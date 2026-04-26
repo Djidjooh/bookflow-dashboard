@@ -146,7 +146,7 @@ elif page == "Clients":
         SELECT
             CUSTOMER_CODE,
             NOM,
-            COUNT(DISTINCT SALE_ID) AS NB_VENTES,
+            COUNT(DISTINCT ID) AS NB_VENTES,
             SUM(QTE) AS TOTAL_QTE_ACHETEE,
             SUM(MONTANT_LIGNE) AS TOTAL_DEPENSE
         FROM BOOKSHOP.MARTS.OBT_SALES
@@ -180,7 +180,7 @@ elif page == "Détail OBT":
     df = run_query("""
         SELECT *
         FROM BOOKSHOP.MARTS.OBT_SALES
-        ORDER BY SALE_ID
+        ORDER BY ID
     """)
 
     st.write(f"{len(df)} lignes disponibles")
