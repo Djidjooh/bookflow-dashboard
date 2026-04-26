@@ -168,13 +168,24 @@ elif page == "Clients":
         ORDER BY TOTAL_DEPENSE DESC
     """)
 
+    df["COULEUR"] = df["TOTAL_DEPENSE"].apply(
+    lambda x: "VIP (+600k)" if x > 600000 else "Standard"
+    )
+
     fig1 = px.bar(
         df.head(20),
         x="NOM",
         y="TOTAL_DEPENSE",
-        title="Top clients par dépense totale"
+        color="COULEUR",
+        title="Top clients par dépense totale",
+        color_discrete_map={
+            "VIP (+600k)": "yellow",
+            "Standard": "steelblue"
+        }
     )
+
     fig1.update_xaxes(tickangle=45)
+
     st.plotly_chart(fig1, use_container_width=True)
 
     fig2 = px.bar(
