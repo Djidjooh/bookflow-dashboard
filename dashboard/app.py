@@ -49,10 +49,10 @@ if page == "Vue Globale":
 
     st.divider()
 
-    df_cat = df.groupby("CATEGORY_INTITULE", as_index=False)["TOTAL_LINE"].sum()
+    df_cat = df.groupby("CATEGORY_INTITULE", as_index=False)["MONTANT_LIGNE"].sum()
     fig = px.pie(
         df_cat,
-        values="TOTAL_LINE",
+        values="MONTANT_LIGNE",
         names="CATEGORY_INTITULE",
         title="Chiffre d'affaires par catégorie"
     )
