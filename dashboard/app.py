@@ -63,14 +63,14 @@ elif page == "Ventes par Période":
 
     df = run_query("SELECT * FROM BOOKSHOP.MARTS.OBT_SALES")
 
-    df_an = df.groupby("ANNEE", as_index=False).agg(
+    df_an = df.groupby("ANNEES", as_index=False).agg(
         TOTAL_QTE=("QTE", "sum"),
         TOTAL_CA=("TOTAL_LINE", "sum")
     )
 
     fig_an = px.bar(
         df_an,
-        x="ANNEE",
+        x="ANNEES",
         y="TOTAL_CA",
         title="Chiffre d'affaires par année"
     )
