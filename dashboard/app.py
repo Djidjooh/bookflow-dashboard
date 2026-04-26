@@ -179,8 +179,8 @@ elif page == "Clients":
         color="COULEUR",
         title="Top clients par dépense totale",
         color_discrete_map={
-            "VIP (+600k)": "yellow",
-            "Standard": "steelblue"
+            "VIP (+600k)": "orange",
+            "Standard": "darkgreen"
         }
     )
 
