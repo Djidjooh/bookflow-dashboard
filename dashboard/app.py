@@ -65,7 +65,7 @@ elif page == "Ventes par Période":
 
     df_an = df.groupby("ANNEES", as_index=False).agg(
         TOTAL_QTE=("QTE", "sum"),
-        TOTAL_CA=("TOTAL_LINE", "sum")
+        TOTAL_CA=("MONTANT_LIGNE", "sum")
     )
 
     fig_an = px.bar(
@@ -78,7 +78,7 @@ elif page == "Ventes par Période":
 
     df_mois = df.groupby("MOIS", as_index=False).agg(
         TOTAL_QTE=("QTE", "sum"),
-        TOTAL_CA=("TOTAL_LINE", "sum")
+        TOTAL_CA=("MONTANT_LIGNE", "sum")
     )
 
     fig_mois = px.bar(
@@ -108,7 +108,7 @@ elif page == "Top Livres":
             BOOK_INTITULE,
             CATEGORY_INTITULE,
             SUM(QTE) AS TOTAL_QTE,
-            SUM(TOTAL_LINE) AS TOTAL_CA
+            SUM(MONTANT_LIGNE) AS TOTAL_CA
         FROM BOOKSHOP.MARTS.OBT_SALES
         GROUP BY BOOK_CODE, BOOK_INTITULE, CATEGORY_INTITULE
         ORDER BY TOTAL_QTE DESC
@@ -148,7 +148,7 @@ elif page == "Clients":
             NOM,
             COUNT(DISTINCT SALE_ID) AS NB_VENTES,
             SUM(QTE) AS TOTAL_QTE_ACHETEE,
-            SUM(TOTAL_LINE) AS TOTAL_DEPENSE
+            SUM(MONTANT_LIGNE) AS TOTAL_DEPENSE
         FROM BOOKSHOP.MARTS.OBT_SALES
         GROUP BY CUSTOMER_CODE, NOM
         ORDER BY TOTAL_DEPENSE DESC
