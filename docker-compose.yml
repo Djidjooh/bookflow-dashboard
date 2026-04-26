@@ -1,0 +1,242 @@
+
+
+services:   # Liste de tous les conteneurs à lancer
+
+  postgres:   # Nom du service PostgreSQL
+    image: postgres:16   # Image officielle PostgreSQL version 16
+    container_name: bookflow_postgres   # Nom fixe du conteneur
+
+    environment:   # Variables d’environnement injectées dans PostgreSQL
+      POSTGRES_USER: ${POSTGRES_USER}         # utilisateur admin PostgreSQL
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD} # mot de passe
+      POSTGRES_DB: ${POSTGRES_DB}             # base créée automatiquement
+
+    ports:
+      - "5432:5432"   # Port local:port conteneur
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # volume persistant pour conserver les données
+
+      - ./sql:/docker-entrypoint-initdb.d
+      # monte le dossier ./sql local dans le conteneur
+      # tous les fichiers .sql ici seront exécutés automatiquement au 1er lancement
+
+    networks:
+      - bookflow_net   # réseau privé Docker
+
+
+
+  airflow-db:   # Base PostgreSQL dédiée à Airflow
+    image: postgres:16
+    container_name: bookflow_airflow_db
+
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+
+    volumes:
+      - airflow_db_data:/var/lib/postgresql/data
+      # volume persistant pour Airflow metadata DB
+
+    networks:
+      - bookflow_net
+
+
+
+  airflow-init:   # Service temporaire d'initialisation Airflow
+    image: apache/airflow:2.9.3
+    container_name: bookflow_airflow_init
+
+    depends_on:
+      - airflow-db
+      # attend que airflow-db soit démarré
+
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-db:5432/airflow
+      # chaîne de connexion vers la base Airflow
+
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      # exécution parallèle locale
+
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      # ne pas charger les DAG exemples
+
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      # dossiers des DAGs
+
+      - ./dbt:/opt/airflow/dbt
+      # scripts dbt accessibles depuis Airflow
+
+      - ./scripts:/opt/airflow/scripts
+      # scripts Python personnalisés
+
+    command: >
+      bash -c "
+      airflow db migrate &&
+      # initialise la base metadata Airflow
+
+      airflow users create
+      --username admin
+      --password admin
+      --firstname Maurice
+      --lastname Ahouansou
+      --role Admin
+      --email mauriceahouansou@gmail.com
+      "
+      # crée le compte administrateur
+
+    networks:
+      - bookflow_net
+
+
+
+  airflow-webserver:   # Interface web Airflow
+    image: apache/airflow:2.9.3
+    container_name: bookflow_airflow_webserver
+
+    depends_on:
+      - airflow-init
+      # attend initialisation complète
+
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-db:5432/airflow
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+
+      # Variables Snowflake accessibles dans Airflow
+      SNOWFLAKE_ACCOUNT: ${SNOWFLAKE_ACCOUNT}
+      SNOWFLAKE_USER: ${SNOWFLAKE_USER}
+      SNOWFLAKE_PASSWORD: ${SNOWFLAKE_PASSWORD}
+      SNOWFLAKE_ROLE: ${SNOWFLAKE_ROLE}
+      SNOWFLAKE_WAREHOUSE: ${SNOWFLAKE_WAREHOUSE}
+      SNOWFLAKE_DATABASE: ${SNOWFLAKE_DATABASE}
+
+    ports:
+      - "8080:8080"
+      # accès web Airflow
+
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./dbt:/opt/airflow/dbt
+      - ./scripts:/opt/airflow/scripts
+
+    command: webserver
+    # lance interface web
+
+    networks:
+      - bookflow_net
+
+
+
+  airflow-scheduler:   # moteur qui exécute les DAG
+    image: apache/airflow:2.9.3
+    container_name: bookflow_airflow_scheduler
+
+    depends_on:
+      - airflow-webserver
+
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-db:5432/airflow
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./dbt:/opt/airflow/dbt
+      - ./scripts:/opt/airflow/scripts
+
+    command: scheduler
+    # lance planificateur Airflow
+
+    networks:
+      - bookflow_net
+
+
+
+  dbt:   # conteneur pour exécuter DBT
+    image: python:3.11
+    container_name: bookflow_dbt
+
+    working_dir: /app
+    # dossier de travail interne
+
+    volumes:
+      - ./dbt:/app
+      # projet dbt local monté dans le conteneur
+
+    environment:
+      SNOWFLAKE_ACCOUNT: ${SNOWFLAKE_ACCOUNT}
+      SNOWFLAKE_USER: ${SNOWFLAKE_USER}
+      SNOWFLAKE_PASSWORD: ${SNOWFLAKE_PASSWORD}
+      SNOWFLAKE_ROLE: ${SNOWFLAKE_ROLE}
+      SNOWFLAKE_WAREHOUSE: ${SNOWFLAKE_WAREHOUSE}
+      SNOWFLAKE_DATABASE: ${SNOWFLAKE_DATABASE}
+
+    command: >
+      bash -c "
+      pip install dbt-core dbt-snowflake &&
+      # installe DBT
+
+      tail -f /dev/null
+      "
+      # garde conteneur actif
+
+    networks:
+      - bookflow_net
+
+
+
+  streamlit:   # Dashboard web
+    image: python:3.11
+    container_name: bookflow_streamlit
+
+    working_dir: /app
+
+    volumes:
+      - ./dashboard:/app
+      # code dashboard
+
+    environment:
+      SNOWFLAKE_ACCOUNT: ${SNOWFLAKE_ACCOUNT}
+      SNOWFLAKE_USER: ${SNOWFLAKE_USER}
+      SNOWFLAKE_PASSWORD: ${SNOWFLAKE_PASSWORD}
+      SNOWFLAKE_ROLE: ${SNOWFLAKE_ROLE}
+      SNOWFLAKE_WAREHOUSE: ${SNOWFLAKE_WAREHOUSE}
+      SNOWFLAKE_DATABASE: ${SNOWFLAKE_DATABASE}
+
+    ports:
+      - "8501:8501"
+      # accès Streamlit
+
+    command: >
+      bash -c "
+      pip install streamlit pandas plotly snowflake-connector-python &&
+      # installe dépendances
+
+      streamlit run app.py --server.address=0.0.0.0
+      # lance dashboard accessible de l'extérieur
+      "
+
+    networks:
+      - bookflow_net
+
+
+
+volumes:   # volumes persistants Docker
+
+  postgres_data:
+  # stocke les données PostgreSQL
+
+  airflow_db_data:
+  # stocke metadata Airflow
+
+
+
+networks:   # réseaux Docker privés
+
+  bookflow_net:
+    driver: bridge
+    # réseau standard Docker permettant aux conteneurs de communiquer
