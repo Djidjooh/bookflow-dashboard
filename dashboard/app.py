@@ -73,18 +73,21 @@ elif page == "Ventes par Période":
     x="ANNEES",
     y="TOTAL_CA",
     color="ANNEES",
-    color_discrete_sequence=[
-        "#003049",
-        "#d62828",
-        "#f77f00",
-        "#fcbf49",
-        "#2a9d8f",
-        "#6a4c93",
-        "#118ab2"
-    ],
+    color_discrete_map={
+        "2019": "#003049",
+        "2020": "#d62828",
+        "2021": "#f77f00",
+        "2022": "#fcbf49",
+        "2023": "#2a9d8f",
+        "2024": "#6a4c93",
+        "2025": "#118ab2"
+    },
     text="TOTAL_CA",
     title="Chiffre d'affaires par année"
     )
+
+    fig_an.update_traces(textposition="outside")
+
     st.plotly_chart(fig_an, use_container_width=True)
 
     df_mois = df.groupby("MOIS", as_index=False).agg(
