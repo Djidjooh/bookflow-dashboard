@@ -39,21 +39,21 @@ st.title("📚 BookFlow — Tableau de bord des ventes de livres")
 if page == "Vue Globale":
     st.header("Vue globale des ventes")
 
-    df = run_query("SELECT * FROM BOOKSHOP.RAW_MARTS.OBT_SALES")
+    df = run_query("SELECT * FROM BOOKSHOP.MARTS.OBT_SALES")
 
     col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Nombre de ventes", f"{df['SALE_ID'].nunique():,}")
-    col2.metric("Chiffre d'affaires", f"{df['TOTAL_LINE'].sum():,.0f} FCFA")
+    col1.metric("Nombre de ventes", f"{df['ID'].nunique():,}")
+    col2.metric("Chiffre d'affaires", f"{df['MONTANT_LINE'].sum():,.0f} FCFA")
     col3.metric("Quantité vendue", f"{df['QTE'].sum():,.0f}")
     col4.metric("Nombre de clients", f"{df['CUSTOMER_ID'].nunique():,}")
 
     st.divider()
 
-    df_cat = df.groupby("CATEGORY_NAME", as_index=False)["TOTAL_LINE"].sum()
+    df_cat = df.groupby("CATEGORY_INTITULE", as_index=False)["TOTAL_LINE"].sum()
     fig = px.pie(
         df_cat,
         values="TOTAL_LINE",
-        names="CATEGORY_NAME",
+        names="CATEGORY_INTITULE",
         title="Chiffre d'affaires par catégorie"
     )
     st.plotly_chart(fig, use_container_width=True)
@@ -61,7 +61,7 @@ if page == "Vue Globale":
 elif page == "Ventes par Période":
     st.header("Analyse des ventes par période")
 
-    df = run_query("SELECT * FROM BOOKSHOP.RAW_MARTS.OBT_SALES")
+    df = run_query("SELECT * FROM BOOKSHOP.MARTS.OBT_SALES")
 
     df_an = df.groupby("ANNEE", as_index=False).agg(
         TOTAL_QTE=("QTE", "sum"),
@@ -105,12 +105,12 @@ elif page == "Top Livres":
     df = run_query("""
         SELECT
             BOOK_CODE,
-            BOOK_TITLE,
-            CATEGORY_NAME,
+            BOOK_INTITULE,
+            CATEGORY_INTITULE,
             SUM(QTE) AS TOTAL_QTE,
             SUM(TOTAL_LINE) AS TOTAL_CA
-        FROM BOOKSHOP.RAW_MARTS.OBT_SALES
-        GROUP BY BOOK_CODE, BOOK_TITLE, CATEGORY_NAME
+        FROM BOOKSHOP.MARTS.OBT_SALES
+        GROUP BY BOOK_CODE, BOOK_INTITULE, CATEGORY_INTITULE
         ORDER BY TOTAL_QTE DESC
     """)
 
@@ -119,9 +119,9 @@ elif page == "Top Livres":
 
     fig1 = px.bar(
         df_top,
-        x="BOOK_TITLE",
+        x="BOOK_INTITULE",
         y="TOTAL_QTE",
-        color="CATEGORY_NAME",
+        color="CATEGORY_INTITULE",
         title=f"Top {top_n} livres par quantité vendue"
     )
     fig1.update_xaxes(tickangle=45)
@@ -129,9 +129,9 @@ elif page == "Top Livres":
 
     fig2 = px.bar(
         df_top,
-        x="BOOK_TITLE",
+        x="BOOK_INTITULE",
         y="TOTAL_CA",
-        color="CATEGORY_NAME",
+        color="CATEGORY_INTITULE",
         title=f"Top {top_n} livres par chiffre d'affaires"
     )
     fig2.update_xaxes(tickangle=45)
@@ -145,18 +145,18 @@ elif page == "Clients":
     df = run_query("""
         SELECT
             CUSTOMER_CODE,
-            CUSTOMER_NAME,
+            NOM,
             COUNT(DISTINCT SALE_ID) AS NB_VENTES,
             SUM(QTE) AS TOTAL_QTE_ACHETEE,
             SUM(TOTAL_LINE) AS TOTAL_DEPENSE
-        FROM BOOKSHOP.RAW_MARTS.OBT_SALES
-        GROUP BY CUSTOMER_CODE, CUSTOMER_NAME
+        FROM BOOKSHOP.MARTS.OBT_SALES
+        GROUP BY CUSTOMER_CODE, NOM
         ORDER BY TOTAL_DEPENSE DESC
     """)
 
     fig1 = px.bar(
         df.head(20),
-        x="CUSTOMER_NAME",
+        x="NOM",
         y="TOTAL_DEPENSE",
         title="Top clients par dépense totale"
     )
@@ -165,7 +165,7 @@ elif page == "Clients":
 
     fig2 = px.bar(
         df.head(20),
-        x="CUSTOMER_NAME",
+        x="NOM",
         y="NB_VENTES",
         title="Nombre de ventes par client"
     )
@@ -179,7 +179,7 @@ elif page == "Détail OBT":
 
     df = run_query("""
         SELECT *
-        FROM BOOKSHOP.RAW_MARTS.OBT_SALES
+        FROM BOOKSHOP.MARTS.OBT_SALES
         ORDER BY SALE_ID
     """)
 
