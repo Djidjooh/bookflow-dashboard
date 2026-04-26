@@ -45,7 +45,7 @@ if page == "Vue Globale":
     col1.metric("Nombre de ventes", f"{df['ID'].nunique():,}")
     col2.metric("Chiffre d'affaires", f"{df['MONTANT_LIGNE'].sum():,.0f} FCFA")
     col3.metric("Quantité vendue", f"{df['QTE'].sum():,.0f}")
-    col4.metric("Nombre de clients", f"{df['CUSTOMER_ID'].nunique():,}")
+    col4.metric("Nombre de clients", f"{df['ID'].nunique():,}")
 
     st.divider()
 
