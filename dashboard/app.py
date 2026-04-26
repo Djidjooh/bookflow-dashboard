@@ -73,6 +73,7 @@ elif page == "Ventes par Période":
     x="ANNEES",
     y="TOTAL_CA",
     color="ANNEES",
+    color_discrete_sequence=["#1f77b4","#2ca02c","#d62728","#ff7f0e","#9467bd","#17becf","#e377c2"],
     text="TOTAL_CA",
     title="Chiffre d'affaires par année"
     )
