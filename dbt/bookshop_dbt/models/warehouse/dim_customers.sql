@@ -2,8 +2,9 @@
 
 SELECT
     ID AS CUSTOMER_ID,
-    CODE,
+    CODE AS CUSTOMER_CODE,
     FIRST_NAME,
     LAST_NAME,
+    FIRST_NAME || ' ' || LAST_NAME AS NOM,
     EMAIL
 FROM {{ ref('stg_customers') }}

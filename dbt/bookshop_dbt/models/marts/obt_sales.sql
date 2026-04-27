@@ -1,32 +1,36 @@
 {{ config(materialized='table', schema='MARTS') }}
 
 SELECT
-    fs.SALE_ID,
-    fs.DATE_EDIT,
-    YEAR(fs.DATE_EDIT) AS ANNEE,
-    MONTHNAME(fs.DATE_EDIT) AS MOIS,
-    DAYNAME(fs.DATE_EDIT) AS JOUR,
+    v.VENTE_ID AS ID,
+    v.ANNEES,
+    v.MOIS,
+    v.JOUR,
+    v.PU,
+    v.QTE,
+    v.MONTANT_LIGNE,
 
-    fs.PU,
-    fs.QTE,
-    fs.TOTAL_LINE,
+    f.FACTURE_ID,
+    f.FACTURE_CODE,
+    f.QTE_TOTALE,
+    f.TOTAL_AMOUNT,
+    f.TOTAL_PAID,
 
-    dc.CUSTOMER_ID,
-    dc.CODE AS CUSTOMER_CODE,
-    dc.FIRST_NAME,
-    dc.LAST_NAME,
-    dc.FIRST_NAME || ' ' || dc.LAST_NAME AS CUSTOMER_NAME,
-    dc.EMAIL,
+    c.CATEGORY_INTITULE,
 
-    db.BOOK_ID,
-    db.CODE AS BOOK_CODE,
-    db.INTITULE AS BOOK_TITLE,
-    db.ISBN_10,
-    db.ISBN_13,
-    db.CATEGORY_NAME
+    b.CODE AS BOOK_CODE,
+    b.INTITULE AS BOOK_INTITULE,
+    b.ISBN_10,
+    b.ISBN_13,
 
-FROM {{ ref('fact_sales') }} fs
+    dc.CUSTOMER_CODE,
+    dc.NOM
+
+FROM {{ ref('fact_ventes') }} v
+LEFT JOIN {{ ref('fact_factures') }} f
+    ON v.FACTURE_ID = f.FACTURE_ID
+LEFT JOIN {{ ref('dim_books') }} b
+    ON v.BOOK_ID = b.BOOK_ID
+LEFT JOIN {{ ref('dim_category') }} c
+    ON b.CATEGORY_NAME = c.CATEGORY_INTITULE
 LEFT JOIN {{ ref('dim_customers') }} dc
-    ON fs.CUSTOMER_ID = dc.CUSTOMER_ID
-LEFT JOIN {{ ref('dim_books') }} db
-    ON fs.BOOK_ID = db.BOOK_ID
+    ON f.CUSTOMER_ID = dc.CUSTOMER_ID
