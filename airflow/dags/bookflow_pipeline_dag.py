@@ -35,8 +35,8 @@ def run_ingestion():
 
 with DAG(
     dag_id="bookflow_pipeline",
-    start_date=datetime(2025, 1, 1),
-    schedule_interval=None,
+    start_date=datetime(2026, 4, 28, 20, 50),   # heure actuelle ou proche
+    schedule_interval= "*/10 * * * *",
     catchup=False,
     tags=["bookflow", "snowflake", "dbt"],
 ) as dag:
